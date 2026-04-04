@@ -25,45 +25,6 @@
             line-height: 1.5;
         }
 
-        /* Loading Overlay for Auto Ad */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #ffffff;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            transition: opacity 0.5s ease;
-        }
-        .loading-overlay.hide {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 5px solid #f0f0f0;
-            border-top: 5px solid #ff0000;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .loading-text {
-            font-size: 18px;
-            color: #ff0000;
-            font-weight: 500;
-        }
-
         /* Top running bar */
         .top-bar {
             background: #ff0000;
@@ -551,28 +512,11 @@
             cursor: pointer;
             color: #666;
         }
-
-        /* Main content wrapper - initially hidden until auto ad completes */
-        .main-content {
-            visibility: hidden;
-            opacity: 0;
-            transition: visibility 0s, opacity 0.5s ease;
-        }
-        .main-content.visible {
-            visibility: visible;
-            opacity: 1;
-        }
     </style>
 </head>
 <body>
-    <!-- Loading Overlay for Auto Ad -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">প্রথমবারের জন্য একটি এড দেখানো হচ্ছে...</div>
-        <div class="loading-text" style="font-size: 14px; margin-top: 10px;">অনুগ্রহ করে অপেক্ষা করুন</div>
-    </div>
 
-    <div class="main-content" id="mainContent">
+    <div class="main-content">
         <div class="top-bar"><div class="top-bar-content"><i class="fas fa-film"></i> ওয়াচ করুন আর ডাউনলোড করুন ফ্রিতে। প্রতিটি ভিডিও আনলক করতে ২টি এড দেখুন। <i class="fas fa-clock"></i> ২টি এড <i class="fas fa-unlock-alt"></i></div></div>
 
         <div class="header">
@@ -680,7 +624,6 @@
         let currentPendingMovie = null;
         let monetagWindow = null;
         let monetagCloseTimer = null;
-        let autoAdCompleted = false;
         
         function isMovieUnlocked(movieId) {
             let status = unlockStatus.get(movieId);
@@ -795,26 +738,6 @@
             }, 10000);
         }
         
-        // Auto Ad on Page Load (Adsgram only, no monetag)
-        function runAutoAdOnLoad() {
-            return new Promise((resolve) => {
-                if (typeof Adsgram !== 'undefined') {
-                    Adsgram.init({ blockId: "int-25418" }).show()
-                        .then(() => {
-                            console.log("Auto ad completed successfully");
-                            resolve(true);
-                        })
-                        .catch(err => {
-                            console.log("Auto ad error, still proceed", err);
-                            resolve(true);
-                        });
-                } else {
-                    console.log("Adsgram not loaded, skip auto ad");
-                    resolve(true);
-                }
-            });
-        }
-        
         function refreshAllMoviesUI() {
             if (currentCategory === 'favorites') showFavorites();
             else loadMovies(currentCategory);
@@ -913,19 +836,8 @@
             document.getElementById('telegramModal').classList.remove('show'); 
         }
         
-        // Initialize - First run auto ad, then show content
-        async function initializeSite() {
-            // Run auto ad
-            await runAutoAdOnLoad();
-            
-            // Hide loading overlay
-            const overlay = document.getElementById('loadingOverlay');
-            overlay.classList.add('hide');
-            
-            // Show main content
-            const mainContent = document.getElementById('mainContent');
-            mainContent.classList.add('visible');
-            
+        // Initialize - Directly show content, no auto ad
+        function initializeSite() {
             // Load movies and setup
             loadMovies('all');
             updateTrendingButton();
